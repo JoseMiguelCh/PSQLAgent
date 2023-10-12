@@ -21,7 +21,6 @@ TABLE_RESPONSE_FORMAT_CAP_REF = "TABLE_FORMAT"
 SQL_QUERY_DELIMITER = "--------"
 
 def main():
-    # parse prompt parameter using argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("prompt", help="Initial prompt for the AI")
     args = parser.parse_args()
@@ -29,16 +28,14 @@ def main():
     if not args.prompt:
         print("Please provide a prompt")
         return
+    print("Prompt V1", args.prompt)
 
-    # connect to database using with statement and create a db_manager
     with PostgresManager(schema_name=SCHEMA_NAME) as db:
-        print("Prompt V1", args.prompt)
+        
         db.connect_with_url(DATABASE_URL)
-        # call db_manager.get_table_definition_for_prompt() to get tables in prompt ready form
         table_definitions = db.get_table_definition_for_prompt('*')
         print("Table_definitions", table_definitions)
 
-        # create two black calls to llm.add_cap_ref() that update our currrent prompt passed in from cli
         prompt = add_cap_ref(
             args.prompt, 
             f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query. Have in mind the SCHEMA_NAME is {SCHEMA_NAME}",
@@ -48,22 +45,19 @@ def main():
 
         prompt = add_cap_ref(
             prompt,
-            f"Respond in this format {TABLE_RESPONSE_FORMAT_CAP_REF}",
+            f"Respond in this format {TABLE_RESPONSE_FORMAT_CAP_REF}. I need to be able to easily parse the sql query from your response.",
             TABLE_RESPONSE_FORMAT_CAP_REF,
             f"""<explanation of the sql query>
             {SQL_QUERY_DELIMITER}
             <sql query exclusively as raw text>""")
         print("Prompt V3", prompt)
 
-        # call llm.prompt() to get the prompt_response variable
         prompt_response = llm_prompt(prompt)
         print("Prompt Response", prompt_response)
 
-        # parse sql response from prompt_response using SQL_QUERY_DELIMITER '--------'
         sql_query = prompt_response.split(SQL_QUERY_DELIMITER)[1].strip()
         print("SQL Query", sql_query)
 
-        # call db_manager.execute_sql() on each sql query
         result = db.run_sql(sql_query)
         print("---AGENT RESPONSE---")
         print(result)
