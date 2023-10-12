@@ -1,6 +1,5 @@
 import psycopg2
 
-
 class PostgresManager:
     def __init__(self, schema_name='public'):
         self.conn = None
@@ -60,7 +59,6 @@ class PostgresManager:
                 return cur.fetchall()
         except Exception as e:
             print("Error executing SQL:", e)
-
 
     def get_table_definitions(self, table_name):
         select_query = """
