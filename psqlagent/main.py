@@ -3,8 +3,15 @@ import argparse
 from psqlagent.modules.db import PostgresManager
 from dotenv import load_dotenv
 import os
+from autogen import (
+    AssistantAgent,
+    UserProxyAgent,
+    GroupChat,
+    GroupChatManager,
+    config_list_from_json,
+    config_list_from_models
+)
 
-# get env variables
 load_dotenv()
 assert os.getenv(
     'DATABASE_URL') is not None, 'DATABASE_URL env variable not set'
@@ -28,40 +35,31 @@ def main():
     if not args.prompt:
         print("Please provide a prompt")
         return
-    #print("Prompt V1", args.prompt)
 
     with PostgresManager(schema_name=SCHEMA_NAME) as db:
         
         db.connect_with_url(DATABASE_URL)
         table_definitions = db.get_table_definition_for_prompt('*')
-        #print("Table_definitions", table_definitions)
 
         prompt = add_cap_ref(
             args.prompt, 
             f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query. Have in mind the SCHEMA_NAME is {SCHEMA_NAME}",
             POSTGRES_TABLE_DEFINITIONS_CAP_REF,
             table_definitions)
-        #print("Prompt V2", prompt)
 
-        prompt = add_cap_ref(
-            prompt,
-            f"\nRespond in this format {TABLE_RESPONSE_FORMAT_CAP_REF}. I need to be able to easily parse the sql query from your response.",
-            TABLE_RESPONSE_FORMAT_CAP_REF,
-            f"""<explanation of the sql query>
-            {SQL_QUERY_DELIMITER}
-            <sql query exclusively as raw text>""")
-        #print("Prompt V3", prompt)
+        # build the gpt_cofiguration object
+        
+        # build the function map
 
-        prompt_response = llm_prompt(prompt)
-        #print("Prompt Response", prompt_response)
+        # create our terminate msg function
 
-        sql_query = prompt_response.split(SQL_QUERY_DELIMITER)[1].strip()
-        print("===== SQL QUERY =====") 
-        print(sql_query)
+        # create a set of agents with specific functions
+        # admin user proxy agent - takes in the prompt and manages the group chat
+        # data engineer agent - generates the sql query
+        # sr data analyst agent - run the sql query and generate the response
+        # product manager -  validates the response to make sure it is correct
 
-        result = db.run_sql(sql_query)
-        print("\n====== AGENT RESPONSE =====")
-        print(result)
-
+        # create a group chat and initialize the chat.
+        
 if __name__ == '__main__':
     main()
