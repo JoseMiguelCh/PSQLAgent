@@ -47,19 +47,88 @@ def main():
             POSTGRES_TABLE_DEFINITIONS_CAP_REF,
             table_definitions)
 
-        # build the gpt_cofiguration object
+        gpt4_config = {
+            "seed": 42, 
+            "temperature": 0,
+            "config_list": config_list_from_models(["gpt-4"]),
+            "request_timeout": 120,
+            "functions": [
+                {
+                    "name": "run_sql",
+                    "description": "Run the SQL query against the postgres database",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "sql": {
+                                "type": "string",
+                                "description": "The SQL query to run",
+                            }
+                        },
+                        "required": ["sql"]
+                    }
+                }
+            ]
+        }
+
+        function_map = {
+            "run_sql": db.run_sql
+        }
         
-        # build the function map
+        def is_termination_msg(content):
+            have_content = content.get("content", None) is not None
+            if have_content and "APPROVED" in content["content"]:
+                return True
+            return False
+        
+        COMPLETION_PROMPT = " If everything is correct, please type APPROVED. Otherwise, please type REJECTED."
+        USER_PROXY_PROMPT = "A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this admin." + COMPLETION_PROMPT
+        DATA_ENGINEER_PROMPT = """A data engineer. Interact with the planner to discuss the plan. Write PostgreSQL code to solve tasks. Wrap the code in a code block that specifies the script type. The user can't modify your code. So do not suggest incomplete code which requires others to modify. Don't use a code block if it's not intended to be executed by the executor.
+            Don't include multiple code blocks in one response. Do not ask others to copy and paste the result. Check the execution result returned by the executor.
+            If the result indicates there is an error, fix the error and output the code again. Suggest the full code instead of partial code or code changes. If the error can't be fixed or if the task is not solved even after the code is executed successfully, analyze the problem, revisit your assumption, collect additional info you need, and think of a different approach to try.
+            """ + COMPLETION_PROMPT
+        DATA_ANALYST_PROMPT = """Sr. Data Analyst. You follow an approved plan. You run the SQL query, generate the response and send it to the product manager for final review.""" + COMPLETION_PROMPT
+        PRODUCT_MANAGER_PROMPT = """Product Manager. Validate the response to make sure it is correct.""" + COMPLETION_PROMPT
 
-        # create our terminate msg function
+        user_proxy = UserProxyAgent(
+            name="Admin",
+            system_message=USER_PROXY_PROMPT,
+            code_execution_config=False,
+            human_input_mode="NEVER",
+            is_termination_msg=is_termination_msg
+        )
 
-        # create a set of agents with specific functions
-        # admin user proxy agent - takes in the prompt and manages the group chat
-        # data engineer agent - generates the sql query
-        # sr data analyst agent - run the sql query and generate the response
-        # product manager -  validates the response to make sure it is correct
+        engineer = AssistantAgent(
+            name="Engineer",
+            llm_config=gpt4_config,
+            system_message=DATA_ENGINEER_PROMPT,
+            code_execution_config=False,
+            human_input_mode="NEVER",
+            is_termination_msg=is_termination_msg
+        )
 
-        # create a group chat and initialize the chat.
+        scientist = AssistantAgent(
+            name="SrDataAnalyst",
+            llm_config=gpt4_config,
+            system_message=DATA_ANALYST_PROMPT,
+            code_execution_config=False,
+            human_input_mode="NEVER",
+            is_termination_msg=is_termination_msg,
+            function_map=function_map
+        )
+
+        planner = AssistantAgent(
+            name="ProductManager",
+            system_message=PRODUCT_MANAGER_PROMPT,
+            code_execution_config=False,
+            llm_config=gpt4_config,
+            human_input_mode="NEVER",
+            is_termination_msg=is_termination_msg
+        )
+
+        groupchat = GroupChat(agents=[user_proxy, engineer, scientist, planner], messages=[], max_round=10)
+        manager = GroupChatManager(groupchat=groupchat, llm_config=gpt4_config)
+
+        user_proxy.initiate_chat(manager, clear_history=True, message=prompt)
         
 if __name__ == '__main__':
     main()
