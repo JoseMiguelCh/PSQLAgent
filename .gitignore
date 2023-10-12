@@ -3,4 +3,5 @@ psqlagent/modules/__pycache__/*
 
 .vscode/*
 .env
+prompts.txt
 .aider*
