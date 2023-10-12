@@ -5,3 +5,4 @@ psqlagent/modules/__pycache__/*
 .env
 prompts.txt
 .aider*
+.cache/*
