@@ -28,38 +28,39 @@ def main():
     if not args.prompt:
         print("Please provide a prompt")
         return
-    print("Prompt V1", args.prompt)
+    #print("Prompt V1", args.prompt)
 
     with PostgresManager(schema_name=SCHEMA_NAME) as db:
         
         db.connect_with_url(DATABASE_URL)
         table_definitions = db.get_table_definition_for_prompt('*')
-        print("Table_definitions", table_definitions)
+        #print("Table_definitions", table_definitions)
 
         prompt = add_cap_ref(
             args.prompt, 
             f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query. Have in mind the SCHEMA_NAME is {SCHEMA_NAME}",
             POSTGRES_TABLE_DEFINITIONS_CAP_REF,
             table_definitions)
-        print("Prompt V2", prompt)
+        #print("Prompt V2", prompt)
 
         prompt = add_cap_ref(
             prompt,
-            f"Respond in this format {TABLE_RESPONSE_FORMAT_CAP_REF}. I need to be able to easily parse the sql query from your response.",
+            f"\nRespond in this format {TABLE_RESPONSE_FORMAT_CAP_REF}. I need to be able to easily parse the sql query from your response.",
             TABLE_RESPONSE_FORMAT_CAP_REF,
             f"""<explanation of the sql query>
             {SQL_QUERY_DELIMITER}
             <sql query exclusively as raw text>""")
-        print("Prompt V3", prompt)
+        #print("Prompt V3", prompt)
 
         prompt_response = llm_prompt(prompt)
-        print("Prompt Response", prompt_response)
+        #print("Prompt Response", prompt_response)
 
         sql_query = prompt_response.split(SQL_QUERY_DELIMITER)[1].strip()
-        print("SQL Query", sql_query)
+        print("===== SQL QUERY =====") 
+        print(sql_query)
 
         result = db.run_sql(sql_query)
-        print("---AGENT RESPONSE---")
+        print("\n====== AGENT RESPONSE =====")
         print(result)
 
 if __name__ == '__main__':
