@@ -1,0 +1,17 @@
+Create a python class that enables operate on a postgres database using psycopg2. I need the following FUNCTION support.
+
+FUNCTION
+
+__init__()
+__enter__()
+__exit__()
+connect_with_url(url)
+upsert(table_name, _dict) - insert or update a row in a table if id is present in _dict
+delete(table_name, _id) - delete a row in a table by id
+get(table_name, _id) - get a row in a table by id
+get_all(table_name) - get all rows in a table
+run_sql(sql) - run a sql query
+
+get_table_definitions(table_name) - get a table definition in a 'create table' format directly from potgres as string
+get_all_table_names() - get all table names in a database as a list
+get_table_definition_for_prompt(table_name) - combine get_table_definitions() and get_all_table_names() to get a list of table definitions in a 'create table' format for all tables in the database as a string that can be used for our llm prompt

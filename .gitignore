@@ -1,0 +1,6 @@
+psqlagent/__pycache__/*
+psqlagent/modules/__pycache__/*
+
+.vscode/*
+.env
+.aider*

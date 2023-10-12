@@ -19,6 +19,8 @@ assert os.environ.get("OPENAI_APIKEY")
 openai.api_key = os.environ.get("OPENAI_APIKEY")
 
 # ------------------ helpers ------------------
+
+
 def safe_get(data, dot_chained_keys):
     """
     {'a': {'b': [{'c': 1}]}}
