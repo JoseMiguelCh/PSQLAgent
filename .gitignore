@@ -6,3 +6,5 @@ psqlagent/modules/__pycache__/*
 prompts.txt
 .aider*
 .cache/*
+.cache/**/*
+.cache/42/cache.db

@@ -17,4 +17,4 @@ get_all_table_names() - get all table names in a database as a list
 get_table_definition_for_prompt(table_name) - combine get_table_definitions() and get_all_table_names() to get a list of table definitions in a 'create table' format for all tables in the database as a string that can be used for our llm prompt
 
 
-poetry run start --prompt="show count of pasos of every day of january of 2023"                        
+poetry run start --prompt="show count of pasos of every day of january of 2023"                     

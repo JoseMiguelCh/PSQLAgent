@@ -1,5 +1,6 @@
 import psycopg2
 
+
 class PostgresManager:
     def __init__(self, schema_name='public'):
         self.conn = None

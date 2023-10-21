@@ -12,9 +12,7 @@ import openai
 
 # load .env file
 load_dotenv()
-
 assert os.environ.get("OPENAI_APIKEY")
-
 # get openai api key
 openai.api_key = os.environ.get("OPENAI_APIKEY")
 
@@ -43,19 +41,16 @@ def response_parser(response: Dict[str, Any]):
 
 
 # ------------------ content generators ------------------
-
-
 def prompt(prompt: str, model: str = "gpt-4") -> str:
     # validate the openai api key - if it's not valid, raise an error
     if not openai.api_key:
         sys.exit(
             """
-ERORR: OpenAI API key not found. Please export your key to OPENAI_API_KEY
-Example bash command:
-    export OPENAI_API_KEY=<your openai apikey>
+            ERORR: OpenAI API key not found. Please export your key to OPENAI_API_KEY
+            Example bash command:
+                export OPENAI_API_KEY=<your openai apikey>
             """
         )
-
     response = openai.ChatCompletion.create(
         model=model,
         messages=[
@@ -65,7 +60,6 @@ Example bash command:
             }
         ],
     )
-
     return response_parser(response)
 
 
@@ -81,7 +75,5 @@ def add_cap_ref(
         cap_ref_content = 'def foo():\n    return True'
         returns 'Refactor this code. Make it more readable using this EXAMPLE.\n\nEXAMPLE\n\ndef foo():\n    return True'
     """
-
-    new_prompt = f"""{prompt} {prompt_suffix}\n\n{cap_ref}\n\n{cap_ref_content}"""
-
+    new_prompt = f"""User request: ```{prompt.strip().capitalize()}```. {prompt_suffix}\n\n{cap_ref}\n\n{cap_ref_content}"""
     return new_prompt
