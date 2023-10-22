@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple
 import autogen
 
+
 class Orchestrator:
     def __init__(self, name: str, agents: List[autogen.ConversableAgent]):
         self.name = name
@@ -44,10 +45,10 @@ class Orchestrator:
     def add_messages(self, message: str):
         self.messages.append(message)
 
-    def basic_chat(self, 
-        agent_a: autogen.ConversableAgent, 
-        agent_b: autogen.ConversableAgent, 
-        message: str):
+    def basic_chat(self,
+                   agent_a: autogen.ConversableAgent,
+                   agent_b: autogen.ConversableAgent,
+                   message: str):
 
         print(
             f"BasicChat between A: {agent_a.name} and B: {agent_b.name}")
@@ -57,11 +58,11 @@ class Orchestrator:
         self.add_messages(reply)
         print(f"BasicChat response from {agent_b.name} replied with: {reply}")
 
-    def function_chat(self, 
-        agent_a: autogen.ConversableAgent, 
-        agent_b: autogen.ConversableAgent, 
-        message: str):
-        
+    def function_chat(self,
+                      agent_a: autogen.ConversableAgent,
+                      agent_b: autogen.ConversableAgent,
+                      message: str):
+
         print(
             f"FunctionChat between A: {agent_a.name} and B: {agent_b.name}")
 
@@ -75,19 +76,20 @@ class Orchestrator:
         For example
         >>> "Agent A" -> "Agent B" -> "Agent C"
         """
-        print(f"------------ {self.name} is starting a sequential conversation ---------")
+        print(
+            f"------------ {self.name} is starting a sequential conversation ---------")
         print(
             f"\n\nStarting sequential conversation with {self.total_agents} agents\n\n")
 
         self.add_messages(prompt)
-        #return True, self.messages
-        
+        # return True, self.messages
+
         for idx, agent in enumerate(self.agents):
             agent_a = self.agents[idx]
             agent_b = self.agents[idx + 1]
 
             print(
-                f"\n\n ******************* Running conversation {idx} between A: {agent_a.name} and B: {agent_b.name} ****************")
+                f"\n ****** Running iteration {idx} between A: {agent_a.name} and B: {agent_b.name} ****************")
 
             # agent_a -> chat -> agent_b
             if self.last_message_is_str:
@@ -117,16 +119,15 @@ class Orchestrator:
         >>> "Agent A" -> "Agent D"
         """
         print(
-            f"\n\nStarting broadcast conversation with {self.total_agents} agents\n\n")
+            f"\nStarting broadcast conversation with {self.total_agents} agents\n\n")
 
         self.add_messages(prompt)
-        
-        for idx, agent in enumerate(self.agents):
-            agent_a = self.agents[0]
-            agent_b = self.agents[idx]
+        broadcast_agent = self.agents[0]
+
+        for idx, agent in enumerate(self.agents[1:]):  # skip the first agent
 
             print(
-                f"Running conversation {idx} between A: {agent_a.name} and B: {agent_b.name}")
+                f"\n ******  Running iteration {idx} between A: {agent_a.name} and B: {agent_b.name} ****************")
 
             # agent_a -> chat -> agent_b
             if self.last_message_is_str:
@@ -136,13 +137,9 @@ class Orchestrator:
             if self.last_message_is_func_call and self.has_function(agent_a):
                 self.function_chat(agent_a, agent_b, self.latest_message)
 
-            if idx == self.total_agents - 2:
-                print(f"Conversation ended with: {agent_b.name}")
-                print(f"Final message: {self.latest_message}")
+        was_successful = False
+        if self.latest_message is not None:
+            was_successful = self.complete_keyword in self.latest_message
+        print("Successfull" if was_successful else "Unsuccessfull X")
 
-                was_successful = False
-                if self.latest_message is not None:
-                    was_successful = self.complete_keyword in self.latest_message
-                print("Successfull" if was_successful else "Unsuccessfull X")
-
-                return was_successful, self.messages
+        return was_successful, self.messages
