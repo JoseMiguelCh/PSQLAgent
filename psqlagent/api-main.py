@@ -44,18 +44,14 @@ async def query(user_query: str):
     with PostgresManager(schema_name=SCHEMA_NAME) as db:
 
         db.connect_with_url(DATABASE_URL)
-        table_definitions = db.get_table_definition_for_prompt('*')
 
         map_table_name_to_table_def = db.get_table_definition_map_for_embedding("*")
         database_embedder = embeddings.DatabaseEmbedder()
-
         for name, table_def in map_table_name_to_table_def.items():
-            print(f"Adding table {name} to database embedder")
             database_embedder.add_table(name, table_def)
+        
         similar_tables = database_embedder.get_similar_tables(user_query)
-
-        print(db.get_tables_definition_for_prompt(similar_tables))
-        return "OK"
+        table_definitions = db.get_tables_definition_for_prompt(similar_tables)
 
         prompt = add_cap_ref(
             user_query,
@@ -67,6 +63,10 @@ async def query(user_query: str):
             "Data Engineering Orchestrator", db)
         success, messages = datateam_orchestrator.sequential_conversation(
             prompt)
+        datateam_cost, datateam_tokens = datateam_orchestrator.get_cost_and_tokens()
+        print(f"Datateam cost: {datateam_cost}")
+        print(f"Datateam no. tokens: {datateam_tokens}")
+        
         return success, messages
 
 def main():

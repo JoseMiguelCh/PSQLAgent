@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 import autogen
-
+from . import llm
 
 class Orchestrator:
     def __init__(self, name: str, agents: List[autogen.ConversableAgent]):
@@ -44,6 +44,25 @@ class Orchestrator:
 
     def add_messages(self, message: str):
         self.messages.append(message)
+
+    def get_message_as_str(self):
+        messages_as_str = ""
+        for message in self.messages:
+            if message is None:
+                continue
+            if isinstance(message, dict):
+                content_from_dict = message.get("content", None)
+                function_call_from_dict = message.get("function_call", None)
+                content = content_from_dict or function_call_from_dict
+                if not content:
+                    continue
+                messages_as_str += str(content)
+            else:
+                messages_as_str += str(message)
+        return messages_as_str
+    
+    def get_cost_and_tokens(self):
+        return llm.estimate_price_and_tokens(self.get_message_as_str())
 
     def basic_chat(self,
                    agent_a: autogen.ConversableAgent,

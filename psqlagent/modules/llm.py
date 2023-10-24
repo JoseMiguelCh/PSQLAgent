@@ -7,8 +7,9 @@ Purpose:
 import sys
 from dotenv import load_dotenv
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 import openai
+import tiktoken
 
 # load .env file
 load_dotenv()
@@ -77,3 +78,14 @@ def add_cap_ref(
     """
     new_prompt = f"""User request: ```{prompt.strip().capitalize()}```. {prompt_suffix}\n\n{cap_ref}\n\n{cap_ref_content}"""
     return new_prompt
+
+def count_tokens(text: str)-> int:
+    enc = tiktoken.get_encoding("cl100k_base")
+    return len(enc.encode(text))
+
+def estimate_price_and_tokens(text: str) -> Tuple[float, int]:
+    COST_PER_1K_TOKENS = 0.06
+    tokens = count_tokens(text)
+    price = (tokens / 1000) * COST_PER_1K_TOKENS
+    rounded_price = round(price, 2)
+    return rounded_price, tokens
