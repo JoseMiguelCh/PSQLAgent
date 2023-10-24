@@ -71,7 +71,7 @@ class PostgresManager:
             cursor.execute(select_query, (table_name,))
             results = cursor.fetchall()
             definition = [
-                f"col_name: {row[0]}, data_type: {row[1]}" +
+                f"name: {row[0]}, data_type: {row[1]}" +
                 (f"({row[2]})" if row[2] else "")
                 for row in results
             ]
@@ -113,5 +113,23 @@ class PostgresManager:
         for name in table_names:
             definition = self.get_table_definitions(name)
             table_definitions.append(
-                f"Table {name}: definition: [{definition}]")
+                f"TABLE_NAME {name}, COLUMNS: {{definition}}")
+        return "\n".join(table_definitions)
+
+    def get_table_definition_map_for_embedding(self, table_name) -> dict:
+        if table_name == '*':
+            table_names = self.get_all_table_names()
+        else:
+            table_names = [table_name]
+        definitions = {}
+        for name in table_names:
+            definitions[name] = self.get_table_definitions(name)
+        return definitions
+
+    def get_tables_definition_for_prompt(self, table_names: list):
+        table_definitions = []
+        for name in table_names:
+            definition = self.get_table_definitions(name)
+            table_definitions.append(
+                f"TABLE_NAME {name}: COLUMNS: [{definition}]")
         return "\n".join(table_definitions)

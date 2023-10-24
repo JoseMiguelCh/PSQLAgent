@@ -6,6 +6,7 @@ from psqlagent.modules.db import PostgresManager
 from dotenv import load_dotenv
 import os
 from psqlagent.agents.agents import build_team_orchestrator
+from psqlagent.modules import embeddings
 
 load_dotenv()
 assert os.getenv(
@@ -44,6 +45,17 @@ async def query(user_query: str):
 
         db.connect_with_url(DATABASE_URL)
         table_definitions = db.get_table_definition_for_prompt('*')
+
+        map_table_name_to_table_def = db.get_table_definition_map_for_embedding("*")
+        database_embedder = embeddings.DatabaseEmbedder()
+
+        for name, table_def in map_table_name_to_table_def.items():
+            print(f"Adding table {name} to database embedder")
+            database_embedder.add_table(name, table_def)
+        similar_tables = database_embedder.get_similar_tables(user_query)
+
+        print(db.get_tables_definition_for_prompt(similar_tables))
+        return "OK"
 
         prompt = add_cap_ref(
             user_query,
