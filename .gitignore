@@ -1,5 +1,4 @@
-psqlagent/__pycache__/*
-psqlagent/modules/__pycache__/*
+
 
 .vscode/*
 .env
@@ -8,3 +7,5 @@ prompts.txt
 .cache/*
 .cache/**/*
 .cache/42/cache.db
+**/__pycache__/
+
