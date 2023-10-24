@@ -53,26 +53,26 @@ translator = AssistantAgent(
     is_termination_msg=is_termination_msg
 )
 
-def build_engineer_agent(db: PostgresManager) -> AssistantAgent:
-    return AssistantAgent(
+
+engineer =  AssistantAgent(
         name="Engineer",
         llm_config=run_sql_config,
         system_message=DATA_ENGINEER_PROMPT,
         code_execution_config=False,
         human_input_mode="NEVER",
+        is_termination_msg=is_termination_msg
+    )
+
+def build_analyst_agent(db: PostgresManager) -> AssistantAgent:
+    return AssistantAgent(
+        name="SrDataAnalyst",
+        llm_config=base_config,
+        system_message=DATA_ANALYST_PROMPT,
+        code_execution_config=False,
+        human_input_mode="NEVER",
         is_termination_msg=is_termination_msg,
         function_map=build_function_map_run_query(db)
     )
-
-data_analyst = AssistantAgent(
-    name="SrDataAnalyst",
-    llm_config=base_config,
-    system_message=DATA_ANALYST_PROMPT,
-    code_execution_config=False,
-    human_input_mode="NEVER",
-    is_termination_msg=is_termination_msg,
-    # function_map=function_map
-)
 
 planner = AssistantAgent(
     name="ProductManager",
@@ -87,6 +87,6 @@ planner = AssistantAgent(
 def build_team_orchestrator(team: str, db: PostgresManager) -> Orchestrator:
     team_orchestrator = Orchestrator(
         name=f"{team} Orchestrator",
-        agents=[user_proxy, build_engineer_agent(db), data_analyst, planner]
+        agents=[user_proxy, engineer, build_analyst_agent(db), planner]
     )
     return team_orchestrator

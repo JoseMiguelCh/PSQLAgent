@@ -57,9 +57,14 @@ class PostgresManager:
         try:
             with self.conn.cursor() as cur:
                 cur.execute(sql)
-                return cur.fetchall()
+                return self.save_results(cur.fetchall())
         except Exception as e:
             print("Error executing SQL:", e)
+
+    def save_results(self, result_data):
+        with open("results.txt", "w") as file:
+            file.write(str(result_data))
+        return "Successfully delivered results to json file."
 
     def get_table_definitions(self, table_name):
         select_query = """

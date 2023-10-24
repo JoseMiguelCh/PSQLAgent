@@ -40,7 +40,7 @@ class Orchestrator:
         return self.messages[-1]
 
     def has_function(self, agent: autogen.ConversableAgent):
-        return agent._function_map is not None
+        return len(agent._function_map) > 0
 
     def add_messages(self, message: str):
         self.messages.append(message)
