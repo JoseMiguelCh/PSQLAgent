@@ -2,11 +2,13 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from psqlagent.modules.llm import add_cap_ref, prompt as llm_prompt
-from psqlagent.modules.db import PostgresManager
 from dotenv import load_dotenv
 import os
 from psqlagent.agents.agents import build_team_orchestrator
 from psqlagent.modules import embeddings
+from psqlagent.modules.db.postgres import PostgresManager
+from psqlagent.modules.db.sqlserver import SQLServerManager
+from psqlagent.modules.db.dbmanager import DatabaseManager
 
 load_dotenv()
 assert os.getenv(
@@ -18,6 +20,7 @@ assert os.getenv(
 DATABASE_URL = os.getenv('DATABASE_URL')
 SCHEMA_NAME = os.getenv('SCHEMA_NAME')
 OPENAI_APIKEY = os.getenv('OPENAI_APIKEY')
+DATABASE_ENGINE = os.getenv('DATABASE_ENGINE')
 
 POSTGRES_TABLE_DEFINITIONS_CAP_REF = "TABLE_DEFINITIONS"
 TABLE_RESPONSE_FORMAT_CAP_REF = "TABLE_FORMAT"
@@ -41,8 +44,7 @@ async def read_root():
 
 @app.get("/query")
 async def query(user_query: str):
-    with PostgresManager(schema_name=SCHEMA_NAME) as db:
-
+    with create_database_manager() as db:
         db.connect_with_url(DATABASE_URL)
 
         map_table_name_to_table_def = db.get_table_definition_map_for_embedding("*")
@@ -68,6 +70,16 @@ async def query(user_query: str):
         print(f"Datateam no. tokens: {datateam_tokens}")
         
         return success, messages
+
+def create_database_manager(database_type = DATABASE_ENGINE, schema_name = SCHEMA_NAME) -> DatabaseManager:
+    print(f"Creating database manager for {database_type}")
+    if database_type == "SqlServer":
+        return SQLServerManager(schema_name=schema_name)
+    if database_type == "Postgres":
+        return PostgresManager(schema_name=schema_name)
+    
+    raise ValueError("Invalid database type")
+
 
 def main():
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,7 +1,7 @@
 import psycopg2
+from psqlagent.modules.db.dbmanager import DatabaseManager
 
-
-class PostgresManager:
+class PostgresManager(DatabaseManager):
     def __init__(self, schema_name='public'):
         self.conn = None
         self.schema_name = schema_name
@@ -81,25 +81,6 @@ class PostgresManager:
                 for row in results
             ]
             return "; ".join(definition)
-
-    def get_table_definitions_test(self, table_name):
-        get_def_stmt = """
-            SELECT pg_tables.tablename,
-                pg_attribute.attnum,
-                pg_attribute.attname,
-                format_type(atttypid, atttypmod)
-            FROM pg_tables, pg_attribute
-            WHERE pg_attribute.attnum > 0
-                AND pg_attribute.attrelid = pg_tables.oid
-                AND pg_tables.tablename = %s
-            """
-        self.conn.cursor().execute(get_def_stmt, (table_name,))
-        rows = self.conn.cursor().fetchall()
-        create_table_stmt = "CREATE TABLE {} (\n".format(table_name)
-        for row in rows:
-            create_table_stmt += "{} {},\n".format(row[2], row[3])
-        create_table_stmt = create_table_stmt.rstrip(',\n') + "\n);"
-        return create_table_stmt
 
     def get_all_table_names(self):
         query = f"SELECT tablename FROM pg_tables WHERE schemaname = '{self.schema_name}'"

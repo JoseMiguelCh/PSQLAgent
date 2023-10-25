@@ -1,4 +1,4 @@
-from psqlagent.modules.db import PostgresManager
+from psqlagent.modules.db.dbmanager import DatabaseManager
 
 base_config = {
     "use_cache": False,
@@ -27,7 +27,7 @@ run_sql_config = {
     ]
 }
 
-def build_function_map_run_query(db: PostgresManager):
+def build_function_map_run_query(db: DatabaseManager):
     return {
         "run_sql": db.run_sql
     }

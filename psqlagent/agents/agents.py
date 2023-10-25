@@ -1,4 +1,4 @@
-from psqlagent.modules.db import PostgresManager
+from psqlagent.modules.db.dbmanager import DatabaseManager
 from psqlagent.modules.orchestrator import Orchestrator
 from autogen import (
     AssistantAgent,
@@ -63,7 +63,7 @@ engineer =  AssistantAgent(
         is_termination_msg=is_termination_msg
     )
 
-def build_analyst_agent(db: PostgresManager) -> AssistantAgent:
+def build_analyst_agent(db: DatabaseManager) -> AssistantAgent:
     return AssistantAgent(
         name="SrDataAnalyst",
         llm_config=base_config,
@@ -84,7 +84,7 @@ planner = AssistantAgent(
 )
 
 
-def build_team_orchestrator(team: str, db: PostgresManager) -> Orchestrator:
+def build_team_orchestrator(team: str, db: DatabaseManager) -> Orchestrator:
     team_orchestrator = Orchestrator(
         name=f"{team} Orchestrator",
         agents=[user_proxy, engineer, build_analyst_agent(db), planner]
